@@ -1,6 +1,6 @@
 :root {
     --bg-color: #fdfbf7;        /* Soft warm cream / beige background */
-    --card-bg: #ffffff;         /* Clean white for panels and containers */
+    --card-bg: #ffffff;         /* Clean white for panels */
     --accent: #d97706;          /* Warm amber accent */
     --accent-hover: #b45309;    /* Darker amber for hover states */
     --text-color: #292524;      /* Deep warm charcoal for readability */
@@ -14,25 +14,34 @@ body {
     background-color: var(--bg-color);
     color: var(--text-color);
     margin: 0;
-    padding: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
 }
 
 .container {
     width: 100%;
-    max-width: 800px;
+    height: 100%;
     background-color: var(--card-bg);
-    border-radius: 16px;
-    padding: 30px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-    border: 1px solid var(--border-color);
+    border-radius: 0;
+    padding: 40px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    border: none;
+    box-shadow: none;
+    overflow-y: auto;
 }
 
-.view { display: none; }
-.view.active { display: block; }
+.view { 
+    display: none; 
+    flex-direction: column;
+    height: 100%;
+}
+.view.active { 
+    display: flex; 
+}
 
 h1, h2 { 
     text-align: center; 
@@ -44,7 +53,7 @@ button {
     background-color: var(--accent);
     color: white;
     border: none;
-    padding: 10px 20px;
+    padding: 12px 24px;
     border-radius: 8px;
     font-size: 1rem;
     cursor: pointer;
@@ -57,19 +66,21 @@ button.danger:hover { background-color: #dc2626; }
 
 input, select {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     margin: 10px 0 20px 0;
     background: #fafaf9;
     border: 1px solid var(--border-color);
     color: var(--text-color);
     border-radius: 8px;
     box-sizing: border-box;
+    font-size: 1rem;
 }
 
 .room-list {
     list-style: none;
     padding: 0;
-    max-height: 200px;
+    flex-grow: 1;
+    max-height: none;
     overflow-y: auto;
     border: 1px solid var(--border-color);
     border-radius: 8px;
@@ -78,7 +89,7 @@ input, select {
 }
 
 .room-item {
-    padding: 12px;
+    padding: 16px 20px;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
@@ -86,7 +97,7 @@ input, select {
 }
 
 .room-item:last-child { border-bottom: none; }
-.flex-row { display: flex; gap: 10px; }
+.flex-row { display: flex; gap: 15px; }
 .center { text-align: center; }
 
 /* Game board styling */
@@ -94,47 +105,51 @@ input, select {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    justify-content: center;
+    flex-grow: 1;
+    gap: 25px;
 }
 
 .center-pile {
     background: #f5f5f4;
-    width: 120px;
-    height: 160px;
+    width: 140px;
+    height: 190px;
     border-radius: 12px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-weight: bold;
     border: 3px solid var(--accent);
     color: var(--text-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .hand {
     display: flex;
-    gap: 10px;
+    gap: 15px;
     overflow-x: auto;
-    padding: 10px;
+    padding: 15px;
     max-width: 100%;
 }
 
 .card {
     background: white;
     color: var(--text-color);
-    width: 60px;
-    height: 90px;
-    border-radius: 6px;
+    width: 70px;
+    height: 100px;
+    border-radius: 8px;
     display: flex;
     justify-content: center;
     align-items: center;
     font-weight: bold;
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
     border: 1px solid var(--border-color);
     transition: transform 0.2s;
+    flex-shrink: 0;
 }
 
-.card:hover { transform: translateY(-5px); }
+.card:hover { transform: translateY(-8px); }
