@@ -1,3 +1,4 @@
+// 백엔드 서버 URL 설정 (로컬 vs Render 배포 환경 자동 감지)
 const backendURL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:3000'
     : 'https://srv-dbremm49v7es73ccamp0.onrender.com';
@@ -7,14 +8,15 @@ const socket = io(backendURL);
 let currentRoomId = null;
 let isHost = false;
 
-// View switching function with fade effect
+// 뷰 전환 함수 (Fade 효과)
 function showView(viewId) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.getElementById(viewId).classList.add('active');
 }
 
-// Request room list on load
+// 연결 성공 시 방 목록 요청
 socket.on('connect', () => {
+    console.log('Connected to server with ID:', socket.id);
     socket.emit('get_rooms');
 });
 
@@ -26,12 +28,17 @@ socket.on('room_list_update', (rooms) => {
     renderRoomList(rooms);
 });
 
-// Room creation logic
+// 방 생성 요청 함수
 function createRoom() {
-    const name = document.getElementById('room-name-input').value;
-    const maxPlayers = parseInt(document.getElementById('max-players-input').value);
-    const totalCards = parseInt(document.getElementById('total-cards-input').value);
-    const isPublic = document.getElementById('is-public-input').checked;
+    const nameInput = document.getElementById('room-name-input');
+    const maxPlayersInput = document.getElementById('max-players-input');
+    const totalCardsInput = document.getElementById('total-cards-input');
+    const isPublicInput = document.getElementById('is-public-input');
+
+    const name = nameInput ? nameInput.value : 'Switchback Room';
+    const maxPlayers = maxPlayersInput ? parseInt(maxPlayersInput.value) : 4;
+    const totalCards = totalCardsInput ? parseInt(totalCardsInput.value) : 100;
+    const isPublic = isPublicInput ? isPublicInput.checked : true;
 
     if (maxPlayers < 2 || maxPlayers > 6) {
         alert('The number of players must be between 2 and 6.');
@@ -48,14 +55,21 @@ function createRoom() {
 socket.on('room_created', (room) => {
     currentRoomId = room.id;
     isHost = true;
-    document.getElementById('room-title-display').innerText = room.name;
-    document.getElementById('invite-code-display').innerText = room.inviteCode;
+    
+    const titleDisplay = document.getElementById('room-title-display');
+    const inviteDisplay = document.getElementById('invite-code-display');
+    if (titleDisplay) titleDisplay.innerText = room.name;
+    if (inviteDisplay) inviteDisplay.innerText = room.inviteCode;
+    
     showView('room-view');
 });
 
+// 방 목록 렌더링
 function renderRoomList(rooms) {
     const waitingListEl = document.getElementById('waiting-room-list');
     const activeListEl = document.getElementById('active-room-list');
+
+    if (!waitingListEl || !activeListEl) return;
 
     waitingListEl.innerHTML = '';
     activeListEl.innerHTML = '';
@@ -93,19 +107,28 @@ function joinRoom(roomId) {
     socket.emit('join_room', roomId);
 }
 
+function spectateRoom(roomId) {
+    socket.emit('spectate_room', roomId);
+}
+
 socket.on('update_room_players', (room) => {
     currentRoomId = room.id;
-    document.getElementById('room-title-display').innerText = room.name;
-    document.getElementById('invite-code-display').innerText = room.inviteCode;
+    
+    const titleDisplay = document.getElementById('room-title-display');
+    const inviteDisplay = document.getElementById('invite-code-display');
+    if (titleDisplay) titleDisplay.innerText = room.name;
+    if (inviteDisplay) inviteDisplay.innerText = room.inviteCode;
     
     const playerListEl = document.getElementById('player-list');
-    playerListEl.innerHTML = '';
-    room.players.forEach(p => {
-        const li = document.createElement('li');
-        li.className = 'room-item';
-        li.innerHTML = `<span>${p.name}</span> <span>${p.isHost ? '[Host]' : ''}</span>`;
-        playerListEl.appendChild(li);
-    });
+    if (playerListEl) {
+        playerListEl.innerHTML = '';
+        room.players.forEach(p => {
+            const li = document.createElement('li');
+            li.className = 'room-item';
+            li.innerHTML = `<span>${p.name}</span> <span>${p.isHost ? '[Host]' : ''}</span>`;
+            playerListEl.appendChild(li);
+        });
+    }
 
     showView('room-view');
 });
@@ -113,22 +136,34 @@ socket.on('update_room_players', (room) => {
 socket.on('joined_as_spectator', (room) => {
     currentRoomId = room.id;
     showView('game-view');
-    document.getElementById('role-badge').innerText = '(Spectator Mode - Hand Hidden)';
+    const roleBadge = document.getElementById('role-badge');
+    if (roleBadge) roleBadge.innerText = '(Spectator Mode - Hand Hidden)';
     initGameAsSpectator();
+});
+
+// 서버에서 게임 시작 신호가 올 때 실행
+socket.on('game_started', () => {
+    startGame();
 });
 
 socket.on('error_message', (msg) => {
     alert(msg);
 });
 
+// 게임 시작 함수 (호스트가 시작 버튼을 누를 때 호출)
 function startGame() {
+    if (isHost) {
+        socket.emit('start_game', currentRoomId);
+    }
     showView('game-view');
-    document.getElementById('role-badge').innerText = '(Player)';
+    const roleBadge = document.getElementById('role-badge');
+    if (roleBadge) roleBadge.innerText = '(Player)';
     initGame();
 }
 
 function initGame() {
     const handEl = document.getElementById('player-hand');
+    if (!handEl) return;
     handEl.innerHTML = '';
     const sampleCards = [14, 28, 45, 61, 88, 92];
     sampleCards.forEach(num => {
@@ -142,7 +177,9 @@ function initGame() {
 
 function initGameAsSpectator() {
     const handEl = document.getElementById('player-hand');
-    handEl.innerHTML = '<p style="color: var(--text-muted);">Spectators cannot view player hands.</p>';
+    if (handEl) {
+        handEl.innerHTML = '<p style="color: var(--text-muted);">Spectators cannot view player hands.</p>';
+    }
 }
 
 function actionDraw() {
