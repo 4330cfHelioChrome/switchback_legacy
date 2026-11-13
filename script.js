@@ -1,4 +1,8 @@
-const socket = io();
+const backendURL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000'
+    : 'https://srv-dbremm49v7es73ccamp0.onrender.com';
+
+const socket = io(backendURL);
 
 let currentRoomId = null;
 let isHost = false;
