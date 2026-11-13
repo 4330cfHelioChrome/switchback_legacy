@@ -16,12 +16,15 @@
             <button onclick="showView('create-view')" style="flex: 2;">Create Room</button>
             <button onclick="alert('Rule documentation feature')" style="flex: 1; background: #475569;">Game Rules</button>
         </div>
-        <h3>Active / Waiting Rooms</h3>
-        <ul id="room-list" class="room-list">
-            <li class="room-item">
-              <span>[Waiting] Alex's Room (Players: 1/4, Cards: 104)</span>
-              <button onclick="joinRoom('Alex\'s Room')">Join</button>
-            </li>
+        
+        <h3>Public Waiting Rooms</h3>
+        <ul id="waiting-room-list" class="room-list">
+            <!-- Dynamically populated -->
+        </ul>
+
+        <h3>Active Games in Progress</h3>
+        <ul id="active-room-list" class="room-list">
+            <!-- Dynamically populated -->
         </ul>
     </div>
 
@@ -37,6 +40,11 @@
         <label>Total Cards (80 ~ 200)</label>
         <input type="number" id="total-cards-input" min="80" max="200" value="104">
 
+        <div style="margin: 15px 0; display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" id="is-public-input" checked style="width: 20px; height: 20px; margin: 0; cursor: pointer;">
+            <label for="is-public-input" style="cursor: pointer; margin: 0;">Public Room (Show in lobby before start)</label>
+        </div>
+
         <div class="flex-row">
             <button onclick="createRoom()" style="flex: 1;">Create Room</button>
             <button onclick="showView('lobby-view')" class="danger" style="flex: 1;">Cancel</button>
@@ -46,11 +54,10 @@
     <!-- 3. Waiting Room View -->
     <div id="room-view" class="view">
         <h2 id="room-title-display">Room Name</h2>
-        <p class="center">Invite Code: <strong id="invite-code-display" style="color: #60a5fa; font-size: 1.2rem;">AB39</strong></p>
+        <p class="center">Invite Code: <strong id="invite-code-display" style="color: var(--accent); font-size: 1.2rem;">AB39</strong></p>
         <h3>Participants</h3>
         <ul id="player-list" class="room-list">
             <li class="room-item"><span>Host (Me)</span> <span>[Host]</span></li>
-            <li class="room-item"><span>Friend 1</span> <button class="danger" style="padding: 4px 8px; font-size: 0.8rem;">Kick</button></li>
         </ul>
         <div class="flex-row">
             <button onclick="startGame()" style="flex: 2;">Start Game</button>
@@ -61,10 +68,10 @@
     <!-- 4. Game Play View -->
     <div id="game-view" class="view">
         <div class="game-board">
-            <h2>Game in Progress <span id="game-direction" style="color: #38bdf8;">(Ascending ↑)</span></h2>
+            <h2>Game in Progress <span id="game-direction" style="color: var(--accent);">(Ascending ↑)</span></h2>
             <div class="center-pile">
                 <span id="center-number">52</span>
-                <span style="font-size: 0.8rem; color: #94a3b8;">Center Pile</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Center Pile</span>
             </div>
             
             <div style="display: flex; gap: 10px;">
@@ -72,7 +79,7 @@
                 <button onclick="actionChange()" style="background: #f59e0b;">Change (Reverse Direction)</button>
             </div>
 
-            <h3>My Hand</h3>
+            <h3>My Hand <span id="role-badge" style="font-size: 0.9rem; color: var(--accent); font-weight: normal;">(Player)</span></h3>
             <div class="hand" id="player-hand">
                 <!-- Cards will be generated dynamically -->
             </div>
