@@ -1,23 +1,27 @@
 # Game Rules
 
 ## Overview
-A fast-paced, competitive shedding card game for **4–5 players**. Players take turns playing cards in ascending or descending order based on the central pile. The first player to empty their hand wins the game.
+A fast-paced, competitive shedding card game for **4–5 players** (customizable). Players take turns playing cards in ascending or descending order based on the central pile. The first player to empty their hand wins the game.
 
 ---
 
 ## Components & Setup
-* **Deck:** 104 numbered cards (1 to 104). *(Optional: 1 to 100 for web implementation)*
-* **Players:** 4 to 5 players.
+* **Deck:** Numbered cards from **1 up to N** (Default: 104 cards, or 100 cards for web implementation). 
+* **Players:** 4 to 5 players (Recommended).
+
+### Host Settings & Deck Customization
+* **Total Cards (N):** The **Room Host** can configure the total number of cards in the deck before the game starts. 
+* **Hand Size Formula:** Once the total card count ($T$) and the number of players ($P$) are set, cards are distributed evenly based on the formula:
+  $$\lfloor \text{Total Cards} / \text{Number of Players} \rfloor$$
+  *(Remaining cards form the face-down draw pile).*
 
 ### Dealing & Initial State
-1. **Shuffle** the entire deck thoroughly.
-2. **Deal** cards evenly to each player based on the formula: `80 / Number of Players`
-   * **4 Players:** 20 cards each (80 cards dealt, 24 remaining in the draw pile).
-   * **5 Players:** 16 cards each (80 cards dealt, 24 remaining in the draw pile).
+1. **Shuffle** the customized deck thoroughly.
+2. **Deal** cards evenly to each player according to the formula above.
 3. **Starting Card:** Flip 1 card from the remaining draw pile face-up to form the **Center Pile**.
-4. **Initial Direction:** Determine the starting direction based on the Center Pile's value (using **52** as the midpoint):
-   * **52 or lower:** **Ascending** (players must play a *higher* number).
-   * **53 or higher:** **Descending** (players must play a *lower* number).
+4. **Initial Direction:** Determine the starting direction based on the Center Pile's value (using the midpoint, e.g., **52** for 104 cards, or **50** for 100 cards):
+   * **Midpoint or lower:** **Ascending** (players must play a *higher* number).
+   * **Above midpoint:** **Descending** (players must play a *lower* number).
 5. **Turn Order:** Randomly determine the starting player and the turn direction (Clockwise or Counter-Clockwise).
 
 ---
