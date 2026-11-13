@@ -1,18 +1,28 @@
-// Global state for rooms and current session
-let rooms = [];
+const socket = io();
+
 let currentRoomId = null;
 let isHost = false;
 
-// View switching function
+// View switching function with fade effect
 function showView(viewId) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.getElementById(viewId).classList.add('active');
-    if (viewId === 'lobby-view') {
-        renderRoomList();
-    }
 }
 
-// Room creation logic with public toggle and validation
+// Request room list on load
+socket.on('connect', () => {
+    socket.emit('get_rooms');
+});
+
+socket.on('room_list', (rooms) => {
+    renderRoomList(rooms);
+});
+
+socket.on('room_list_update', (rooms) => {
+    renderRoomList(rooms);
+});
+
+// Room creation logic
 function createRoom() {
     const name = document.getElementById('room-name-input').value;
     const maxPlayers = parseInt(document.getElementById('max-players-input').value);
@@ -28,39 +38,27 @@ function createRoom() {
         return;
     }
 
-    const roomId = 'room_' + Math.random().toString(36).substring(2, 6);
-    const inviteCode = Math.random().toString(36).substring(2, 6).toUpperCase();
-
-    const newRoom = {
-        id: roomId,
-        name: name,
-        maxPlayers: maxPlayers,
-        totalCards: totalCards,
-        isPublic: isPublic,
-        isStarted: false,
-        playersCount: 1,
-        inviteCode: inviteCode
-    };
-
-    rooms.push(newRoom);
-    currentRoomId = roomId;
-    isHost = true;
-
-    document.getElementById('room-title-display').innerText = name;
-    document.getElementById('invite-code-display').innerText = inviteCode;
-    showView('room-view');
+    socket.emit('create_room', { name, maxPlayers, totalCards, isPublic });
 }
 
-// Render public waiting rooms and active games in lobby
-function renderRoomList() {
+socket.on('room_created', (room) => {
+    currentRoomId = room.id;
+    isHost = true;
+    document.getElementById('room-title-display').innerText = room.name;
+    document.getElementById('invite-code-display').innerText = room.inviteCode;
+    showView('room-view');
+});
+
+function renderRoomList(rooms) {
     const waitingListEl = document.getElementById('waiting-room-list');
     const activeListEl = document.getElementById('active-room-list');
 
     waitingListEl.innerHTML = '';
     activeListEl.innerHTML = '';
 
-    const publicWaiting = rooms.filter(r => r.isPublic && !r.isStarted);
-    const activeGames = rooms.filter(r => r.isStarted);
+    const roomArray = Object.values(rooms);
+    const publicWaiting = roomArray.filter(r => r.isPublic && !r.isStarted);
+    const activeGames = roomArray.filter(r => r.isStarted);
 
     if (publicWaiting.length === 0) {
         waitingListEl.innerHTML = '<li class="room-item" style="color: var(--text-muted); justify-content: center;">No public waiting rooms available.</li>';
@@ -68,7 +66,7 @@ function renderRoomList() {
         publicWaiting.forEach(room => {
             const li = document.createElement('li');
             li.className = 'room-item';
-            li.innerHTML = `<span>${room.name} (Players: ${room.playersCount}/${room.maxPlayers}, Cards: ${room.totalCards})</span>
+            li.innerHTML = `<span>${room.name} (Players: ${room.players.length}/${room.maxPlayers}, Cards: ${room.totalCards})</span>
                             <button onclick="joinRoom('${room.id}')">Join</button>`;
             waitingListEl.appendChild(li);
         });
@@ -80,7 +78,7 @@ function renderRoomList() {
         activeGames.forEach(room => {
             const li = document.createElement('li');
             li.className = 'room-item';
-            li.innerHTML = `<span>[Playing] ${room.name} (Players: ${room.playersCount}/${room.maxPlayers})</span>
+            li.innerHTML = `<span>[Playing] ${room.name} (Players: ${room.players.length}/${room.maxPlayers})</span>
                             <button onclick="spectateRoom('${room.id}')" style="background: #475569;">Spectate</button>`;
             activeListEl.appendChild(li);
         });
@@ -88,32 +86,38 @@ function renderRoomList() {
 }
 
 function joinRoom(roomId) {
-    const room = rooms.find(r => r.id === roomId);
-    if (!room) return;
-
-    currentRoomId = roomId;
-    isHost = false;
-    document.getElementById('room-title-display').innerText = room.name;
-    document.getElementById('invite-code-display').innerText = room.inviteCode;
-    showView('room-view');
+    socket.emit('join_room', roomId);
 }
 
-function spectateRoom(roomId) {
-    const room = rooms.find(r => r.id === roomId);
-    if (!room) return;
+socket.on('update_room_players', (room) => {
+    currentRoomId = room.id;
+    document.getElementById('room-title-display').innerText = room.name;
+    document.getElementById('invite-code-display').innerText = room.inviteCode;
+    
+    const playerListEl = document.getElementById('player-list');
+    playerListEl.innerHTML = '';
+    room.players.forEach(p => {
+        const li = document.createElement('li');
+        li.className = 'room-item';
+        li.innerHTML = `<span>${p.name}</span> <span>${p.isHost ? '[Host]' : ''}</span>`;
+        playerListEl.appendChild(li);
+    });
 
-    currentRoomId = roomId;
+    showView('room-view');
+});
+
+socket.on('joined_as_spectator', (room) => {
+    currentRoomId = room.id;
     showView('game-view');
     document.getElementById('role-badge').innerText = '(Spectator Mode - Hand Hidden)';
     initGameAsSpectator();
-}
+});
 
-// Initialize game when started by host
+socket.on('error_message', (msg) => {
+    alert(msg);
+});
+
 function startGame() {
-    const room = rooms.find(r => r.id === currentRoomId);
-    if (room) {
-        room.isStarted = true;
-    }
     showView('game-view');
     document.getElementById('role-badge').innerText = '(Player)';
     initGame();
@@ -144,6 +148,3 @@ function actionDraw() {
 function actionChange() {
     alert('Change! Direction reversed and turn passed.');
 }
-
-// Initial render call when script loads
-renderRoomList();
