@@ -1,1 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Switchback - Card Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
+<div class="container">
+    <!-- 1. Lobby View -->
+    <div id="lobby-view" class="view active">
+        <h1>Switchback Lobby</h1>
+        <div class="flex-row" style="margin-bottom: 20px;">
+            <button onclick="showView('create-view')" style="flex: 2;">Create Room</button>
+            <button onclick="alert('Rule documentation feature')" style="flex: 1; background: #475569;">Game Rules</button>
+        </div>
+        <h3>Active / Waiting Rooms</h3>
+        <ul id="room-list" class="room-list">
+            <li class="room-item">
+              <span>[Waiting] Alex's Room (Players: 1/4, Cards: 104)</span>
+              <button onclick="joinRoom('Alex\'s Room')">Join</button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- 2. Create Room View -->
+    <div id="create-view" class="view">
+        <h2>Room Settings</h2>
+        <label>Room Name</label>
+        <input type="text" id="room-name-input" value="My Card Room">
+        
+        <label>Max Players (2 ~ 6)</label>
+        <input type="number" id="max-players-input" min="2" max="6" value="4">
+        
+        <label>Total Cards (80 ~ 200)</label>
+        <input type="number" id="total-cards-input" min="80" max="200" value="104">
+
+        <div class="flex-row">
+            <button onclick="createRoom()" style="flex: 1;">Create Room</button>
+            <button onclick="showView('lobby-view')" class="danger" style="flex: 1;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- 3. Waiting Room View -->
+    <div id="room-view" class="view">
+        <h2 id="room-title-display">Room Name</h2>
+        <p class="center">Invite Code: <strong id="invite-code-display" style="color: #60a5fa; font-size: 1.2rem;">AB39</strong></p>
+        <h3>Participants</h3>
+        <ul id="player-list" class="room-list">
+            <li class="room-item"><span>Host (Me)</span> <span>[Host]</span></li>
+            <li class="room-item"><span>Friend 1</span> <button class="danger" style="padding: 4px 8px; font-size: 0.8rem;">Kick</button></li>
+        </ul>
+        <div class="flex-row">
+            <button onclick="startGame()" style="flex: 2;">Start Game</button>
+            <button onclick="showView('lobby-view')" class="danger" style="flex: 1;">Leave</button>
+        </div>
+    </div>
+
+    <!-- 4. Game Play View -->
+    <div id="game-view" class="view">
+        <div class="game-board">
+            <h2>Game in Progress <span id="game-direction" style="color: #38bdf8;">(Ascending ↑)</span></h2>
+            <div class="center-pile">
+                <span id="center-number">52</span>
+                <span style="font-size: 0.8rem; color: #94a3b8;">Center Pile</span>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button onclick="actionDraw()">Draw 1 Card</button>
+                <button onclick="actionChange()" style="background: #f59e0b;">Change (Reverse Direction)</button>
+            </div>
+
+            <h3>My Hand</h3>
+            <div class="hand" id="player-hand">
+                <!-- Cards will be generated dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
