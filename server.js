@@ -23,7 +23,7 @@ const rooms = {};
 
 // 난수 생성기 (초대 코드용)
 function generateInviteCode() {
-  return Math.random().toString(36.substring(2, 8)).toUpperCase();
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
 io.on('connection', (socket) => {
