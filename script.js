@@ -6,7 +6,7 @@ const backendURL = window.location.hostname === 'localhost' || window.location.h
 const socket = io(backendURL);
 
 let currentRoomId = null;
-let isHost = false;
+let currentRoomData = null; // 현재 방 전체 데이터를 저장하는 변수
 
 // 뷰 전환 함수 (Fade 효과)
 function showView(viewId) {
@@ -54,13 +54,8 @@ function createRoom() {
 
 socket.on('room_created', (room) => {
     currentRoomId = room.id;
-    isHost = true;
-    
-    const titleDisplay = document.getElementById('room-title-display');
-    const inviteDisplay = document.getElementById('invite-code-display');
-    if (titleDisplay) titleDisplay.innerText = room.name;
-    if (inviteDisplay) inviteDisplay.innerText = room.inviteCode;
-    
+    currentRoomData = room;
+    updateRoomView(room);
     showView('room-view');
 });
 
@@ -111,13 +106,16 @@ function spectateRoom(roomId) {
     socket.emit('spectate_room', roomId);
 }
 
-socket.on('update_room_players', (room) => {
+// 방 정보 업데이트 헬퍼 함수
+function updateRoomView(room) {
     currentRoomId = room.id;
+    currentRoomData = room;
     
     const titleDisplay = document.getElementById('room-title-display');
     const inviteDisplay = document.getElementById('invite-code-display');
     if (titleDisplay) titleDisplay.innerText = room.name;
-    if (inviteDisplay) inviteDisplay.innerText = room.inviteCode;
+    // inviteCode가 없을 경우를 대비해 안전하게 처리
+    if (inviteDisplay) inviteDisplay.innerText = room.inviteCode || room.id.substring(5, 11).toUpperCase();
     
     const playerListEl = document.getElementById('player-list');
     if (playerListEl) {
@@ -129,36 +127,45 @@ socket.on('update_room_players', (room) => {
             playerListEl.appendChild(li);
         });
     }
+}
 
+socket.on('update_room_players', (room) => {
+    updateRoomView(room);
     showView('room-view');
 });
 
 socket.on('joined_as_spectator', (room) => {
     currentRoomId = room.id;
+    currentRoomData = room;
     showView('game-view');
     const roleBadge = document.getElementById('role-badge');
     if (roleBadge) roleBadge.innerText = '(Spectator Mode - Hand Hidden)';
     initGameAsSpectator();
 });
 
-// 서버에서 게임 시작 신호가 올 때 실행
+// 서버에서 게임 시작 신호가 올 때 실행 (모든 플레이어 공통)
 socket.on('game_started', () => {
-    startGame();
+    showView('game-view');
+    const roleBadge = document.getElementById('role-badge');
+    if (roleBadge) roleBadge.innerText = '(Player)';
+    initGame();
 });
 
 socket.on('error_message', (msg) => {
     alert(msg);
 });
 
-// 게임 시작 함수 (호스트가 시작 버튼을 누를 때 호출)
-function startGame() {
-    if (isHost) {
+// 방장이 시작 버튼을 누를 때 호출되는 함수
+function requestStartGame() {
+    if (!currentRoomData) return;
+    
+    // 현재 접속한 유저가 방장(Host)인지 안전하게 체크
+    const me = currentRoomData.players.find(p => p.id === socket.id);
+    if (me && me.isHost) {
         socket.emit('start_game', currentRoomId);
+    } else {
+        alert('Only the host can start the game.');
     }
-    showView('game-view');
-    const roleBadge = document.getElementById('role-badge');
-    if (roleBadge) roleBadge.innerText = '(Player)';
-    initGame();
 }
 
 function initGame() {
